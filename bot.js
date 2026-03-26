@@ -10,12 +10,12 @@ const COMMAND_COOLDOWN = 3000;
 const data = new DataManager();
 
 // --- ADMIN CONFIGURATION ---
-const DEVELOPER_ID = "100092567839096";
-const SUPER_ADMIN_ID = "100092567839096";
-const BOT_USER_ID_TO_DETECT = "61572200383571";
+const DEVELOPER_ID = "YOUR ID";
+const SUPER_ADMIN_ID = "GC OWNER ID";
+const BOT_USER_ID_TO_DETECT = "DON'T MIND THIS";
 
 let ADMIN_IDS = [
-  "100092567839096"
+  "ADMIN-ID"
 ];
 // ---------------------------
 
