@@ -1,0 +1,20 @@
+{
+  "name": "messenger-attendance-bot",
+  "version": "1.0.0",
+  "description": "Facebook Messenger bot for group chat attendance tracking",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "keywords": [
+    "facebook",
+    "messenger",
+    "bot",
+    "attendance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dongdev/fca-unofficial": "^2.0.32"
+  }
+}
