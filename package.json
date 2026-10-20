@@ -1,18 +1,19 @@
 {
-  "name": "messenger-attendance-bot",
+  "name": "kamel-boumrdassi-messenger-bot",
   "version": "1.0.0",
-  "description": "Facebook Messenger bot for group chat attendance tracking",
+  "description": "🪻💤 𝑲𝒂𝒎𝒆𝒍 𝑩𝒐𝒖𝒎𝒓𝒅𝒂𝒔𝒔𝒊 | Personal Messenger Bot",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
   "keywords": [
+    "kamel-boumrdassi",
     "facebook",
     "messenger",
     "bot",
     "attendance"
   ],
-  "author": "",
+  "author": "🪻💤 𝑲𝒂𝒎𝒆𝒍 𝑩𝒐𝒖𝒎𝒓𝒅𝒂𝒔𝒔𝒊",
   "license": "ISC",
   "dependencies": {
     "@dongdev/fca-unofficial": "^2.0.32"
