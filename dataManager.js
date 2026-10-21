@@ -63,7 +63,7 @@ class DataManager {
   // ... [Existing Methods: Greeting, Attendance, Bans, Warnings etc. - KEEP AS IS] ...
   
   getGreeting(threadID) {
-    return this.greetings[threadID] || "Welcome {name} to the group! 👋";
+    return this.greetings[threadID] || "مرحباً {name}، نورت المجموعة! 👋🌷";
   }
 
   setGreeting(threadID, greeting) {
