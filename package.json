@@ -4,7 +4,8 @@
   "description": "🪻💤 𝑲𝒂𝒎𝒆𝒍 𝑩𝒐𝒖𝒎𝒓𝒅𝒂𝒔𝒔𝒊 | Personal Messenger Bot",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node bot.js",
+    "test": "node --test"
   },
   "keywords": [
     "kamel-boumrdassi",
