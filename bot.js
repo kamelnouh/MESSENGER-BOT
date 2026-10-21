@@ -1,4 +1,3 @@
-const login = require("@dongdev/fca-unofficial");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
@@ -58,6 +57,7 @@ function saveAppState(appState) {
 }
 
 async function initializeBot() {
+  const login = require("@dongdev/fca-unofficial");
   const appState = loadAppState();
   if (!appState) {
     console.error("=== LOGIN REQUIRED ===\nPlease create appstate.json");
@@ -720,26 +720,34 @@ async function handleVonCommand(threadID, messageID) {
   sendMessage(threadID, "🌐 رابط موقع Von:\nhttps://www.von.gov.dz", messageID);
 }
 
-async function handleGroupEvent(event) {
+async function handleGroupEvent(event, services = {}) {
   const { threadID, logMessageType, logMessageData } = event;
-  const info = await getThreadInfo(threadID);
+  const eventData = services.data || data;
+  const fetchThreadInfo = services.getThreadInfo || getThreadInfo;
+  const syncGroupMembers = services.updateGroupMembers || updateGroupMembers;
+  const fetchUserInfo = services.getUserInfo || getUserInfo;
+  const checkAdmin = services.isAdmin || isAdmin;
+  const send = services.sendMessage || sendMessage;
+  const apiClient = services.api || api;
+  const currentBotUserId = services.botUserId ?? botUserId;
+  const info = await fetchThreadInfo(threadID);
   if (logMessageType === "log:subscribe") {
-    await updateGroupMembers(threadID, info);
+    await syncGroupMembers(threadID, info);
     const added = logMessageData.addedParticipants.map(p => p.userFbId);
     for (const uid of added) {
-      if (uid === botUserId) {
-        api.changeNickname("TENSURA", threadID, botUserId, ()=>{});
+      if (uid === currentBotUserId) {
+        apiClient.changeNickname("TENSURA", threadID, currentBotUserId, ()=>{});
         continue;
       }
-      if (data.isBanned(threadID, uid)) {
-        sendMessage(threadID, "🚫 تنبيه: تم رصد عضو محظور يحاول الدخول وتم طرده.");
-        setTimeout(() => api.removeUserFromGroup(uid, threadID, ()=>{}), 1000);
+      if (eventData.isBanned(threadID, uid)) {
+        send(threadID, "🚫 تنبيه: تم رصد عضو محظور يحاول الدخول وتم طرده.");
+        setTimeout(() => apiClient.removeUserFromGroup(uid, threadID, ()=>{}), 1000);
         continue;
       }
-      const user = await getUserInfo(uid);
+      const user = await fetchUserInfo(uid);
       const name = info.nicknames?.[uid] || user?.name || "عضو";
-      if (!isAdmin(threadID, uid)) data.addMember(threadID, uid, name);
-      sendMessage(threadID, data.getGreeting(threadID).replace("{name}", name));
+      if (!checkAdmin(threadID, uid)) eventData.addMember(threadID, uid, name);
+      send(threadID, eventData.getGreeting(threadID).replace("{name}", name));
     }
   }
 }
@@ -784,6 +792,9 @@ async function performDailyReset() {
 function startPeriodicAppStateSave() { setInterval(() => api && saveAppState(api.getAppState()), 3600000); }
 function startPeriodicBanCheck() { setInterval(() => data.checkAndLiftExpiredBans().forEach(b => sendMessage(b.threadID, `⏰ تم رفع الحظر تلقائياً عن: ${b.nickname}`)), 60000); }
 
-process.on("SIGINT", () => { if(api) saveAppState(api.getAppState()); process.exit(0); });
-initializeBot().catch(e => console.error(e));
- 
+if (require.main === module) {
+  process.on("SIGINT", () => { if(api) saveAppState(api.getAppState()); process.exit(0); });
+  initializeBot().catch(e => console.error(e));
+}
+
+module.exports = { handleGroupEvent };
