@@ -6,7 +6,12 @@ const { createCanvas, loadImage } = require("canvas");
 // دالة ذكية لتخمين الجنس بناءً على الاسم أو الحساب للكوميديا الجزائرية
 function guessGender(name) {
   const n = name.toLowerCase();
-  const femaleKeywords = ['fatima', 'zohra', 'amina', 'nour', 'imen', 'rym', 'rania', 'meryem', 'khaoula', 'chaima', 'asma', 'hiba', 'sara', 'selma', 'imene', 'manel', 'nadia', 'hanane', 'amina', 'صارة', 'فاطمة', 'أمينة', 'مريم', 'إيمان', 'ريم', 'رانية', 'شيماء', 'أسماء', 'هبة', 'سلسبيل', 'سندس', 'نهاد', 'ملك', 'سيرين', 'خولة', 'نور', 'إناس'];
+  const femaleKeywords = [
+    'fatima', 'zohra', 'amina', 'nour', 'imen', 'rym', 'rania', 'meryem', 
+    'khaoula', 'chaima', 'asma', 'hiba', 'sara', 'selma', 'imene', 'manel', 
+    'nadia', 'hanane', 'صارة', 'فاطمة', 'أمينة', 'مريم', 'إيمان', 'ريم', 
+    'رانية', 'شيماء', 'أسماء', 'هبة', 'سلسبيل', 'سندس', 'نهاد', 'ملك', 'سيرين', 'خولة', 'نور', 'إناس'
+  ];
   for (const kw of femaleKeywords) {
     if (n.includes(kw)) return 'female';
   }
@@ -53,7 +58,7 @@ module.exports = {
         const gender1 = guessGender(user1Name);
         const gender2 = guessGender(user2Name);
         
-        // --- بنوك القصف الساخر والتبارك حسب الحالات الأربع (عشوائي بين قصف ومباركة) ---
+        // --- بنوك القصف الساخر والتبارك حسب الحالات الأربع ---
         let finalReport = "";
         const isRoastMode = Math.random() < 0.75; // 75% فرصة قصف وتمنيك، 25% مباركة صافية
 
@@ -121,7 +126,7 @@ module.exports = {
         const avatar2Url = `https://graph.facebook.com/${user2ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
         
         try {
-          // --- تصميم البطاقة عبر الـ Canvas بألوان عشوائية ومختلفة في كل مرة ---
+          // --- تصميم البطاقة عبر الـ Canvas ---
           const canvas = createCanvas(1200, 630);
           const ctx = canvas.getContext('2d');
 
@@ -227,3 +232,4 @@ module.exports = {
     });
   }
 };
+      
