@@ -1,7 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const axios = require("axios");
-const ytdl = require("ytdl-core");
 const DataManager = require("./dataManager");
 
 const APPSTATE_FILE = "appstate.json";
@@ -673,6 +671,7 @@ async function handleUnsendMessage(event) {
     if (photo && photo.url) {
       lastUnsentImage.set(threadID, { url: photo.url, sender: nickname, senderID: senderID, timestamp: Date.now() });
       try {
+        const axios = require("axios");
         const imagePath = path.join(__dirname, "cache", `unsent_${messageID}.jpg`);
         const response = await axios({ url: photo.url, responseType: "stream" });
         const writer = fs.createWriteStream(imagePath);
@@ -693,6 +692,7 @@ async function handleUnsentCommand(threadID, messageID) {
   const unsentData = lastUnsentImage.get(threadID);
   if (!unsentData || Date.now() - unsentData.timestamp > 86400000) return sendMessage(threadID, "❌ لا توجد صور محذوفة حديثاً.", messageID);
   
+  const axios = require("axios");
   const imagePath = path.join(__dirname, "cache", `manual_unsent_${Date.now()}.jpg`);
   const response = await axios({ url: unsentData.url, responseType: "stream" });
   const writer = fs.createWriteStream(imagePath);
@@ -703,6 +703,7 @@ async function handleUnsentCommand(threadID, messageID) {
 }
 
 async function handlePlayCommand(threadID, messageID, senderID, message) {
+  const ytdl = require("ytdl-core");
   const url = message.replace(/(?:\.تشغيل|\.play)\s+/, "").trim();
   if (!url || !ytdl.validateURL(url)) return sendMessage(threadID, "❌ رابط يوتيوب غير صالح.", messageID);
   sendMessage(threadID, "🎵 جاري معالجة وتحميل الصوت...", messageID);
