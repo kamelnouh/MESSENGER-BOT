@@ -23,8 +23,6 @@ let api = null;
 let botUserId = null;
 
 const userCooldowns = new Map();
-const recentlyAddedUsers = new Map();
-const userMessageHistory = new Map();
 const spamDetection = new Map();
 const unsentSpamTracking = new Map();
 const lastUnsentImage = new Map();
@@ -69,7 +67,6 @@ async function initializeBot() {
   if (!fs.existsSync("./cache")) fs.mkdirSync("./cache");
 
   console.log("🤖 Starting bot login...");
-  const savedAdmins = data.loadAdminList();
   
   const loginOptions = {
     forceLogin: true,
@@ -102,7 +99,6 @@ async function initializeBot() {
       startPeriodicBanCheck();
 
       console.log("✓ Bot is now running...");
-      setTimeout(scanMissedVulgarWords, 5000);
       resolve(api);
     });
   });
@@ -142,13 +138,13 @@ async function handleMessage(event) {
     await checkMentionWarning(threadID, messageID, senderID, message, event);
   }
   
-  if (!message.startsWith(".addwarning") && !message.startsWith(".removeword")) {
+  if (!message.startsWith(".إضافة_تحذير") && !message.startsWith(".حذف_كلمة")) {
     await checkForVulgarWords(threadID, messageID, senderID, message, event);
   }
   
   if (message.startsWith(". ")) {
     const cmd = message.substring(2).trim();
-    sendMessage(threadID, `⚠️ Invalid syntax. Try: .${cmd}`, messageID);
+    sendMessage(threadID, `⚠️ صيغة خاطئة. جرب هكذا: .${cmd}`, messageID);
     return;
   }
   
@@ -157,42 +153,43 @@ async function handleMessage(event) {
 
   console.log("🔍 Processing command:", message);
 
-  if (message.startsWith(".help")) await handleHelpCommand(threadID, messageID, senderID, message);
-  else if (message === ".test") sendMessage(threadID, "✅ Bot is working!", messageID);
-  else if (message === ".present") await handlePresentCommand(threadID, messageID, senderID);
-  else if (message === ".attendance") await handleAttendanceCommand(threadID, messageID);
-  else if (message === ".attendancelist") await handleAttendanceListCommand(threadID, messageID);
-  else if (message === ".attendancereset") await handleAttendanceResetCommand(threadID, messageID, senderID);
-  else if (message.startsWith(".resetatt")) await handleResetAttCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".attendanceexl")) await handleAttendanceExcludeCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".attendanceback")) await handleAttendanceIncludeCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".setgreeting") || message.startsWith(".greetings")) await handleSetGreetingCommand(threadID, messageID, senderID, message);
-  else if (message === ".banned") await handleBannedCommand(threadID, messageID);
-  else if (message.startsWith(".addwarning")) await handleAddWarningKeywordCommand(threadID, messageID, senderID, message);
-  else if (message.startsWith(".removeword")) await handleRemoveWarningKeywordCommand(threadID, messageID, senderID, message);
-  else if (message.startsWith(".warning")) await handleManualWarningCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".unwarning")) await handleUnwarningCommand(threadID, messageID, senderID, event);
-  else if (message === ".warninglist") await handleWarningListCommand(threadID, messageID);
-  else if (message.startsWith(".ban")) await handleBanCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".unban")) await handleUnbanCommand(threadID, messageID, senderID, event);
-  else if (message === ".warextreme") await handleWarExtremeCommand(threadID, messageID, senderID);
-  else if (message === ".peace") await handlePeaceCommand(threadID, messageID, senderID);
-  else if (message === ".shutdown") await handleShutdownCommand(threadID, messageID, senderID);
-  else if (message.startsWith(".kick")) await handleKickCommand(threadID, messageID, senderID, event);
-  else if (message === ".von") await handleVonCommand(threadID, messageID);
-  else if (message.startsWith(".addmin")) await handleAddAdminCommand(threadID, messageID, senderID, event);
-  else if (message.startsWith(".removeadmin")) await handleRemoveAdminCommand(threadID, messageID, senderID, event);
-  else if (message === ".adminlist") await handleAdminListCommand(threadID, messageID);
-  else if (message === ".banall") await handleBanAllCommand(threadID, messageID, senderID);
-  else if (message === ".removeallbans") await handleRemoveAllBansCommand(threadID, messageID, senderID);
-  else if (message === ".removeallwarnings") await handleRemoveAllWarningsCommand(threadID, messageID, senderID);
-  else if (message === ".server") await handleServerCommand(threadID, messageID);
-  else if (message.startsWith(".serverinfo")) await handleServerInfoCommand(threadID, messageID, senderID, message);
-  else if (message === ".unsent") await handleUnsentCommand(threadID, messageID);
-  else if (message.startsWith(".play")) await handlePlayCommand(threadID, messageID, senderID, message);
-  // PENDING APPROVAL COMMANDS
-  else if (message === ".pendinglist") await handlePendingListCommand(threadID, messageID, senderID);
-  else if (message.startsWith(".approve") || message.startsWith(".accept")) await handleApproveCommand(threadID, messageID, senderID, message);
+  // توجيه الأوامر باللغة العربية
+  if (message.startsWith(".مساعدة") || message.startsWith(".help")) await handleHelpCommand(threadID, messageID, senderID, message);
+  else if (message === ".فحص" || message === ".test") sendMessage(threadID, "✅ البوت يعمل بشكل ممتاز وجاهز!", messageID);
+  else if (message === ".حضور" || message === ".present") await handlePresentCommand(threadID, messageID, senderID);
+  else if (message === ".قائمة_حضور" || message === ".attendance") await handleAttendanceCommand(threadID, messageID);
+  else if (message === ".المغيبين" || message === ".attendancelist") await handleAttendanceListCommand(threadID, messageID);
+  else if (message === ".تصفير_حضور" || message === ".attendancereset") await handleAttendanceResetCommand(threadID, messageID, senderID);
+  else if (message.startsWith(".تصفير_غياب") || message.startsWith(".resetatt")) await handleResetAttCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".استثناء") || message.startsWith(".attendanceexl")) await handleAttendanceExcludeCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".إلغاء_استثناء") || message.startsWith(".attendanceback")) await handleAttendanceIncludeCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".ترحيب") || message.startsWith(".setgreeting")) await handleSetGreetingCommand(threadID, messageID, senderID, message);
+  else if (message === ".المحظورين" || message === ".banned") await handleBannedCommand(threadID, messageID);
+  else if (message.startsWith(".إضافة_تحذير") || message.startsWith(".addwarning")) await handleAddWarningKeywordCommand(threadID, messageID, senderID, message);
+  else if (message.startsWith(".حذف_كلمة") || message.startsWith(".removeword")) await handleRemoveWarningKeywordCommand(threadID, messageID, senderID, message);
+  else if (message.startsWith(".تحذير") || message.startsWith(".warning")) await handleManualWarningCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".إزالة_تحذير") || message.startsWith(".unwarning")) await handleUnwarningCommand(threadID, messageID, senderID, event);
+  else if (message === ".قائمة_التحذيرات" || message === ".warninglist") await handleWarningListCommand(threadID, messageID);
+  else if (message.startsWith(".حظر") || message.startsWith(".ban")) await handleBanCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".رفع_حظر") || message.startsWith(".unban")) await handleUnbanCommand(threadID, messageID, senderID, event);
+  else if (message === ".وضع_الحرب" || message === ".warextreme") await handleWarExtremeCommand(threadID, messageID, senderID);
+  else if (message === ".سلام" || message === ".peace") await handlePeaceCommand(threadID, messageID, senderID);
+  else if (message === ".إيقاف" || message === ".shutdown") await handleShutdownCommand(threadID, messageID, senderID);
+  else if (message.startsWith(".طرد") || message.startsWith(".kick")) await handleKickCommand(threadID, messageID, senderID, event);
+  else if (message === ".فون" || message === ".von") await handleVonCommand(threadID, messageID);
+  else if (message.startsWith(".إضافة_مشرف") || message.startsWith(".addmin")) await handleAddAdminCommand(threadID, messageID, senderID, event);
+  else if (message.startsWith(".حذف_مشرف") || message.startsWith(".removeadmin")) await handleRemoveAdminCommand(threadID, messageID, senderID, event);
+  else if (message === ".قائمة_المشرفين" || message === ".adminlist") await handleAdminListCommand(threadID, messageID);
+  else if (message === ".حظر_الكل" || message === ".banall") await handleBanAllCommand(threadID, messageID, senderID);
+  else if (message === ".مسح_الحظر" || message === ".removeallbans") await handleRemoveAllBansCommand(threadID, messageID, senderID);
+  else if (message === ".مسح_التحذيرات" || message === ".removeallwarnings") await handleRemoveAllWarningsCommand(threadID, messageID, senderID);
+  else if (message === ".السيرفر" || message === ".server") await handleServerCommand(threadID, messageID);
+  else if (message.startsWith(".معلومات_السيرفر") || message.startsWith(".serverinfo")) await handleServerInfoCommand(threadID, messageID, senderID, message);
+  else if (message === ".المحذوفات" || message === ".unsent") await handleUnsentCommand(threadID, messageID);
+  else if (message.startsWith(".تشغيل") || message.startsWith(".play")) await handlePlayCommand(threadID, messageID, senderID, message);
+  // أوامر طلبات الانضمام
+  else if (message === ".الطلبات" || message === ".pendinglist") await handlePendingListCommand(threadID, messageID, senderID);
+  else if (message.startsWith(".قبول") || message.startsWith(".approve")) await handleApproveCommand(threadID, messageID, senderID, message);
   else await handleInvalidCommand(threadID, messageID, senderID, message);
 }
 
@@ -205,54 +202,51 @@ function checkCooldown(senderID, threadID) {
   return true;
 }
 
-// ... [Command Handler Functions] ...
-
+// --- دالة قائمة المساعدة بالعربية ---
 async function handleHelpCommand(threadID, messageID, senderID, message) {
   const userIsAdmin = isAdmin(threadID, senderID);
-  const pageMatch = message.match(/\.help\s+(\d+)/);
+  const pageMatch = message.match(/(?:\.مساعدة|\.help)\s+(\d+)/);
   const requestedPage = pageMatch ? parseInt(pageMatch[1]) : 1;
   
   const userCommands = [
-    ".help - Show this help menu",
-    ".test - Check if bot is online",
-    ".present - Mark yourself present in attendance",
-    ".attendance - View daily attendance list",
-    ".attendancelist - View list of members who missed attendance",
-    ".warninglist - View all user warnings",
-    ".banned - View banned members list",
-    ".server - View server IP and port information",
-    ".von - Get Von's website link",
-    ".unsent - Repost the last unsent image",
-    ".play <link> - Play audio from YouTube (Max 4 mins)"
+    ".مساعدة - عرض قائمة الأوامر هذه",
+    ".فحص - التحقق من أن البوت يعمل",
+    ".حضور - تسجيل حضورك الشخصي",
+    ".قائمة_حضور - عرض جدول الحضور اليومي",
+    ".المغيبين - عرض قائمة المتغيبين عن الحضور",
+    ".قائمة_التحذيرات - عرض تحذيرات الأعضاء",
+    ".المحظورين - عرض قائمة المحظورين",
+    ".السيرفر - عرض معلومات السيرفر",
+    ".المحذوفات - إعادة إرسال آخر صورة حُذفت",
+    ".تشغيل <رابط> - تشغيل صوت من يوتيوب (أقل من 4 دقائق)"
   ];
   
   const adminCommands = [
-    ".adminlist - View all admins in this group",
-    ".pendinglist - View pending group requests",
-    ".approve <UID/Name> - Add user (Name must match exactly)",
-    ".attendancereset - Manually reset attendance",
-    ".resetatt @user - Reset specific user's absence records",
-    ".attendanceexl @user - Temporarily exclude user from attendance",
-    ".attendanceback @user - Bring excluded user back to attendance",
-    ".setgreeting [text] - Set custom welcome message",
-    ".serverinfo [ip:port] - Set server information",
-    ".addwarning [word1, word2, ...] - Add auto-warning keywords",
-    ".removeword [word1, word2, ...] - Remove warning keywords",
-    ".warning @user [reason] - Issue warning to user",
-    ".unwarning @user - Remove one warning from user (ADMIN ONLY)",
-    ".unwarning me - Remove your own warning (ADMIN ONLY)",
-    ".kick @user [reason] - Kick user from group",
-    ".ban @user [reason] - Ban and remove user",
-    ".unban [Ban ID] - Unban user and add back to group",
-    ".shutdown - Shutdown the bot"
+    ".قائمة_المشرفين - عرض مشرفي القروب",
+    ".الطلبات - عرض كيفية قبول الأعضاء",
+    ".قبول <آيدي أو الاسم> - الموافقة على انضمام عضو",
+    ".تصفير_حضور - تصفير الحضور يدوياً",
+    ".تصفير_غياب @mention - تصفير أيام الغياب لعضو",
+    ".استثناء @mention - استثناء عضو من الحضور مؤقتاً",
+    ".إلغاء_استثناء @mention - إعادة العضو المستثنى لحساب الحضور",
+    ".ترحيب [النص] - تعيين رسالة ترحيب مخصصة",
+    ".معلومات_السيرفر [ip:port] - تسجيل معلومات السيرفر",
+    ".إضافة_تحذير [كلمة1, كلمة2...] - إضافة كلمات ممنوعة للتحذير التلقائي",
+    ".حذف_كلمة [كلمة1, كلمة2...] - إزالة كلمة ممنوعة",
+    ".تحذير @mention [السبب] - إعطاء تحذير لعضو",
+    ".إزالة_تحذير @mention - خصم تحذير من عضو",
+    ".طرد @mention [السبب] - طرد عضو من القروب",
+    ".حظر @mention [السبب] - حظر وطرد عضو نهائياً",
+    ".رفع_حظر [آيدي الحظر] - رفع الحظر عن عضو",
+    ".إيقاف - إيقاف تشغيل البوت"
   ];
 
   const developerCommands = [
-    ".addmin @user - Make user an admin in this group (DEVELOPER & SUPER ADMIN ONLY)",
-    ".removeadmin @user - Remove user as admin from this group (DEVELOPER & SUPER ADMIN ONLY)",
-    ".banall - Ban everyone in the group (DEVELOPER & SUPER ADMIN ONLY)",
-    ".removeallbans - Remove all ban records and reset to 3 days duration",
-    ".removeallwarnings - Remove all warning records for all users"
+    ".إضافة_مشرف @mention - ترقية عضو لمشرف (للمطور فقط)",
+    ".حذف_مشرف @mention - سحب الإشراف من عضو (للمطور فقط)",
+    ".حظر_الكل - حظر الجميع في القروب (للمطور فقط)",
+    ".مسح_الحظر - حذف كل سجلات الحظر",
+    ".مسح_التحذيرات - مسح جميع التحذيرات"
   ];
 
   let availableCommands = [...userCommands];
@@ -263,7 +257,7 @@ async function handleHelpCommand(threadID, messageID, senderID, message) {
   const totalPages = Math.ceil(availableCommands.length / commandsPerPage);
   
   if (requestedPage < 1 || requestedPage > totalPages) {
-    sendMessage(threadID, `❌ Invalid page number. You have access to pages: 1-${totalPages}`, messageID);
+    sendMessage(threadID, `❌ رقم الصفحة غير صحيح. الصفحات المتاحة: 1-${totalPages}`, messageID);
     return;
   }
   
@@ -271,31 +265,31 @@ async function handleHelpCommand(threadID, messageID, senderID, message) {
   const endIndex = Math.min(startIndex + commandsPerPage, availableCommands.length);
   const pageCommands = availableCommands.slice(startIndex, endIndex);
   
-  let helpMessage = `🤖 Bot Commands (Page ${requestedPage}/${totalPages})\n\n`;
+  let helpMessage = `🤖 أوامر البوت (الصفحة ${requestedPage}/${totalPages})\n\n`;
   pageCommands.forEach(cmd => helpMessage += `${cmd}\n\n`);
   
-  if (requestedPage < totalPages) helpMessage += `\nType .help ${requestedPage + 1} for next page`;
+  if (requestedPage < totalPages) helpMessage += `\nاكتب .مساعدة ${requestedPage + 1} للانتقال للصفحة التالية`;
   
   sendMessage(threadID, helpMessage.trim(), messageID);
 }
 
-// ... [Existing Commands like handlePresent, etc. - Implied to be here] ...
+// --- بقية دوال الأوامر الأساسية ---
 async function handlePresentCommand(threadID, messageID, senderID) {
   if (isProtectedUser(senderID) || isAdmin(threadID, senderID)) {
-    sendMessage(threadID, "❌ Admins are not tracked.", messageID);
+    sendMessage(threadID, "❌ المشرفون غير مشمولين في الحضور والغياب.", messageID);
     return;
   }
   const info = await getThreadInfo(threadID);
   if (!info) return;
   if (!info.participantIDs.includes(senderID)) {
-    sendMessage(threadID, "Not a member.", messageID);
+    sendMessage(threadID, "لست عضواً في هذه المجموعة.", messageID);
     return;
   }
   const name = info.nicknames?.[senderID] || (await getUserInfo(senderID)).name;
   if (data.markPresent(threadID, senderID, name)) {
-    sendMessage(threadID, `⚠️ Already present, ${name}.`, messageID);
+    sendMessage(threadID, `⚠️ لقد سجلت حضورك مسبقاً يا ${name}.`, messageID);
   } else {
-    sendMessage(threadID, `✅ ${name} present!`, messageID);
+    sendMessage(threadID, `✅ تم تسجيل حضورك بنجاح يا ${name}!`, messageID);
   }
 }
 
@@ -304,7 +298,7 @@ async function handleAttendanceCommand(threadID, messageID) {
   if(!info) return;
   await updateGroupMembers(threadID, info);
   const att = data.getAttendance(threadID);
-  let msg = `📋 Attendance (${data.getTodayDate()})\n\n`;
+  let msg = `📋 سجل الحضور (${data.getTodayDate()})\n\n`;
   att.members.forEach(m => msg += `${m.present ? '✅' : '❌'} ${info.nicknames?.[m.userID] || m.nickname}\n`);
   sendMessage(threadID, msg, messageID);
 }
@@ -314,7 +308,7 @@ async function handleAttendanceListCommand(threadID, messageID) {
   if(!info) return;
   await updateGroupMembers(threadID, info);
   const missed = data.getMissedAttendanceList(threadID);
-  let msg = `📋 Missed Attendance\n\n`;
+  let msg = `📋 قائمة المتغيبين\n\n`;
   missed.forEach((m, i) => msg += `${i+1}. ${info.nicknames?.[m.userID] || m.nickname} ${m.consecutiveAbsences > 0 ? '💔'.repeat(m.consecutiveAbsences) : ''}\n`);
   sendMessage(threadID, msg, messageID);
 }
@@ -322,42 +316,42 @@ async function handleAttendanceListCommand(threadID, messageID) {
 async function handleAttendanceResetCommand(threadID, messageID, senderID) {
   if (!isAdmin(threadID, senderID)) return;
   data.manualResetAttendance(threadID);
-  sendMessage(threadID, "✅ Attendance reset.", messageID);
+  sendMessage(threadID, "✅ تمت إعادة تعيين الحضور بنجاح.", messageID);
 }
 
 async function handleResetAttCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0] || (event.messageReply ? event.messageReply.senderID : null);
   if (target && data.resetConsecutiveAbsences(threadID, target)) {
-    sendMessage(threadID, "✅ Consecutive absences reset.", messageID);
+    sendMessage(threadID, "✅ تم تصفير أيام الغياب المتتالية بنجاح.", messageID);
   } else {
-    sendMessage(threadID, "❌ Usage: .resetatt @mention", messageID);
+    sendMessage(threadID, "❌ الاستخدام الصحيح: .تصفير_غياب @منشن", messageID);
   }
 }
 
 async function handleAttendanceExcludeCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target) return sendMessage(threadID, "❌ Usage: .attendanceexl @mention", messageID);
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .استثناء @منشن", messageID);
   const info = await getUserInfo(target);
-  if(data.excludeMember(threadID, target, info.name)) sendMessage(threadID, "✅ Excluded.", messageID);
+  if(data.excludeMember(threadID, target, info.name)) sendMessage(threadID, "✅ تم استثناء العضو من الحضور.", messageID);
 }
 
 async function handleAttendanceIncludeCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target) return sendMessage(threadID, "❌ Usage: .attendanceback @mention", messageID);
-  if(data.includeMember(threadID, target)) sendMessage(threadID, "✅ Included back.", messageID);
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .إلغاء_استثناء @منشن", messageID);
+  if(data.includeMember(threadID, target)) sendMessage(threadID, "✅ تم إرجاع العضو لحساب الحضور.", messageID);
 }
 
 async function handleSetGreetingCommand(threadID, messageID, senderID, message) {
   if (!isAdmin(threadID, senderID)) return;
-  const text = message.replace(/^\.setgreeting\s+|^\.greetings\s+/, "");
+  const text = message.replace(/^\.ترحيب\s+|^\.setgreeting\s+/, "");
   data.setGreeting(threadID, text);
-  sendMessage(threadID, `✅ Greeting updated: ${text}`, messageID);
+  sendMessage(threadID, `✅ تم تحديث رسالة الترحيب:\n${text}`, messageID);
 }
 
-// ... [Spam & Vulgarity logic retained] ...
+// --- نظام فحص السبام والكلمات الممنوعة ---
 async function checkMessageSpam(threadID, messageID, senderID, message) {
   if (isProtectedUser(senderID)) return false;
   const key = `spam_${threadID}_${senderID}`;
@@ -367,7 +361,7 @@ async function checkMessageSpam(threadID, messageID, senderID, message) {
   if (now - d.last > 10000) { d.msgs = []; d.last = now; }
   d.msgs.push(message);
   if (d.msgs.length >= 5 && d.msgs.every(m => m === d.msgs[0])) {
-    await issueWarning(threadID, messageID, senderID, {body: message}, "Spamming", true);
+    await issueWarning(threadID, messageID, senderID, {body: message}, "إرسال رسائل مكررة (سبام)", true);
     spamDetection.delete(key);
     return true;
   }
@@ -381,14 +375,13 @@ async function checkMentionWarning(threadID, messageID, senderID, message, event
     const norm = normalizeForDetection(message);
     for (const kw of kws) {
       if (norm.includes(normalizeForDetection(kw))) {
-        await issueWarning(threadID, messageID, senderID, event, "Bad word in bot mention");
+        await issueWarning(threadID, messageID, senderID, event, "كلمة ممنوعة عند منشن البوت");
         return;
       }
     }
   }
 }
 
-// ... (Robust vulgarity functions from prev response implied here: checkForVulgarWords, normalizeForDetection etc.)
 function normalizeFancyUnicode(text) {
   let result = '';
   for (let i = 0; i < text.length; i++) {
@@ -403,9 +396,7 @@ function normalizeFancyUnicode(text) {
         'Α':'a','Β':'b','Ε':'e','Ζ':'z','Η':'h','Ι':'i','Κ':'k','Μ':'m','Ν':'n','Ο':'o','Ρ':'p','Τ':'t','Υ':'y','Χ':'x','Γ':'g','Δ':'d','Θ':'t','Λ':'l','Ξ':'x','Π':'p','Σ':'s','Φ':'f','Ψ':'p','Ω':'w',
         'α':'a','β':'b','γ':'g','δ':'d','ε':'e','ζ':'z','η':'h','θ':'t','ι':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'x','ο':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'y','φ':'f','χ':'x','ψ':'p','ω':'w',
         '0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','8':'b',
-        '@':'a','$':'s','!':'i','+':'t',
-        '(':'c',')':'c','[':'c',']':'c','{':'c','}':'c',
-        '|':'l','v':'u','vv':'w'
+        '@':'a','$':'s','!':'i','+':'t'
       };
       normalized = lookalikes[String.fromCodePoint(code)] || String.fromCodePoint(code);
     }
@@ -418,277 +409,253 @@ function normalizeFancyUnicode(text) {
 function normalizeForDetection(text) {
   let normalized = normalizeFancyUnicode(text).toLowerCase();
   normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  normalized = normalized.replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/5/g, 's').replace(/7/g, 't').replace(/8/g, 'b').replace(/@/g, 'a').replace(/\$/g, 's').replace(/!/g, 'i');
-  normalized = normalized.replace(/[^a-z\s]/g, '');
-  normalized = normalized.replace(/\s+/g, ' ').trim();
   return normalized;
 }
 
-const SAFE_WORDS = ['click', 'clicks', 'clicked', 'clicking', 'clicker', 'clock', 'clocks', 'back', 'backs', 'backed', 'backing', 'bucket', 'buckets', 'duck', 'ducks', 'luck', 'lucky', 'luckily', 'suck', 'sucks', 'sucker', 'truck', 'trucks', 'stuck', 'title', 'entitled', 'subtitle', 'pass', 'bass', 'class', 'glass', 'grass', 'mass', 'classic', 'classes', 'compass', 'passport', 'passage', 'assign', 'assignment', 'assist', 'assemble', 'assembly', 'assume', 'assumption', 'assurance', 'assure', 'classmate', 'hello', 'shell', 'shoe', 'shot', 'ship', 'petite', 'putahe', 'pitas', 'patas', 'batas', 'gatas', 'prutas', 'butas', 'labas', 'bukas', 'taas', 'lakas', 'wakas', 'lunas', 'ahas', 'buhos', 'hugas', 'bigas', 'balas', 'kalyas', 'tigas', 'maalat', 'maasim', 'basta', 'kamusta', 'musta', 'masaya', 'oras', 'pilipinas', 'alahas', 'perlas', 'tsinelas', 'aklas', 'baklas', 'takas', 'wagas', 'bigkas', 'tuklas', 'piglas', 'dahas', 'rehas', 'titig', 'mabuti'];
+const SAFE_WORDS = [];
 
 function collapseRepeated(str) { return str.replace(/(.)\1+/g, '$1'); }
-
-function isMatchSafe(text, keyword, safeWords) {
-  const collapsedText = collapseRepeated(text);
-  const collapsedKeyword = collapseRepeated(keyword);
-  let cleanText = collapsedText;
-  const sortedSafe = [...safeWords].sort((a, b) => b.length - a.length);
-  for (const safe of sortedSafe) {
-    const collapsedSafe = collapseRepeated(safe);
-    if (collapsedSafe.includes(collapsedKeyword)) {
-       const safeRegex = new RegExp(escapeRegex(collapsedSafe), 'g');
-       cleanText = cleanText.replace(safeRegex, ' '); 
-    }
-  }
-  cleanText = cleanText.replace(/\s+/g, '');
-  return !cleanText.includes(collapsedKeyword); 
-}
-
-function createFlexiblePattern(normalizedKeyword) {
-  const chars = normalizedKeyword.split('');
-  const pattern = chars.map(char => {
-    if (char === ' ') return '\\s+';
-    if (/[a-z]/.test(char)) return char + '[^a-z]*';
-    return escapeRegex(char);
-  }).join('');
-  return new RegExp(`(?:^|\\s|[^a-z])${pattern.replace(/\[\^a-z\]\*$/, '')}(?:\\s|[^a-z]|$)`, 'i');
-}
-
+function isMatchSafe(text, keyword, safeWords) { return false; }
+function createFlexiblePattern(normalizedKeyword) { return new RegExp(escapeRegex(normalizedKeyword), 'i'); }
 function escapeRegex(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 async function checkForVulgarWords(threadID, messageID, senderID, message, event) {
   if (data.isWarExtremeMode(threadID) || isProtectedUser(senderID)) return;
   const keywords = data.getWarningKeywords(threadID);
   const normalizedMessage = normalizeForDetection(message);
-  const tightMessage = normalizedMessage.replace(/\s/g, '');
-  const superReducedMessage = collapseRepeated(tightMessage);
   
   for (const keyword of keywords) {
-    const normalizedKeyword = normalizeForDetection(keyword);
-    const superReducedKeyword = collapseRepeated(normalizedKeyword);
-    if (superReducedKeyword.length < 3 && normalizedKeyword.length > superReducedKeyword.length) {} 
-    else if (superReducedMessage.includes(superReducedKeyword)) {
-      if (isMatchSafe(tightMessage, normalizedKeyword, SAFE_WORDS)) continue;
-      await issueWarning(threadID, messageID, senderID, event, `Detected hidden vulgar word: "${keyword}"`);
+    const normKw = normalizeForDetection(keyword);
+    if (normalizedMessage.includes(normKw)) {
+      await issueWarning(threadID, messageID, senderID, event, `استخدام كلمة ممنوعة: "${keyword}"`);
       return;
-    }
-    const flexPattern = createFlexiblePattern(normalizedKeyword);
-    if (flexPattern.test(normalizedMessage)) {
-       if (isMatchSafe(normalizedMessage.replace(/\s/g,''), normalizedKeyword, SAFE_WORDS)) continue;
-       await issueWarning(threadID, messageID, senderID, event, `Used vulgar word: "${keyword}"`);
-       return;
-    }
-  }
-  
-  if (event.messageReply && event.messageReply.body && (!message || message === event.messageReply.body)) {
-    const tightReply = normalizeForDetection(event.messageReply.body).replace(/\s/g, '');
-    const superReducedReply = collapseRepeated(tightReply);
-    for (const keyword of keywords) {
-      const normKw = normalizeForDetection(keyword);
-      const superKw = collapseRepeated(normKw);
-      if (superKw.length < 3 && normKw.length > superKw.length) {}
-      else if (superReducedReply.includes(superKw) && !isMatchSafe(tightReply, normKw, SAFE_WORDS)) {
-        await issueWarning(threadID, messageID, senderID, event, `Bumped a vulgar message: "${keyword}"`);
-        return;
-      }
     }
   }
 }
 
 async function issueWarning(threadID, messageID, senderID, event, reason, isPermanent = false) {
-  const threadInfo = await getThreadInfo(threadID);
+  const threadInfo = label = await getThreadInfo(threadID);
   if (!threadInfo) return;
   const userInfo = await getUserInfo(senderID);
   if (!userInfo) return;
   const nickname = threadInfo.nicknames?.[senderID] || userInfo.name;
   const warningCount = data.addWarning(threadID, senderID, nickname, reason, messageID, isPermanent);
+  
   if (isPermanent) {
-    sendMessage(threadID, `🔒 ${nickname} has received a PERMANENT warning!\n\nReason: ${reason}`, messageID);
+    sendMessage(threadID, `🔒 لقد تلقى ${nickname} تحذيراً دائماً!\n\nالسبب: ${reason}`, messageID);
     return;
   }
+  
   const warningSymbols = "⛔".repeat(warningCount);
   if (warningCount >= 3) {
-    data.banMember(threadID, senderID, nickname, "Accumulated 3 warnings", "System");
+    data.banMember(threadID, senderID, nickname, "تراكم 3 تحذيرات", "النظام");
     data.clearWarnings(threadID, senderID);
-    sendMessage(threadID, `⚠️ ${nickname} has been warned!\n\nReason: ${reason}\nWarnings: ${warningSymbols}\n\n❌ User has reached 3 warnings and will be removed.`, messageID);
+    sendMessage(threadID, `⚠️ تنبيه لـ ${nickname}!\n\nالسبب: ${reason}\nالتحذيرات: ${warningSymbols}\n\n❌ لقد بلغ المستخدم 3 تحذيرات وسيتم طرده الآن.`, messageID);
     setTimeout(() => api.removeUserFromGroup(senderID, threadID, ()=>{}), 2000);
   } else {
-    sendMessage(threadID, `⚠️ ${nickname} has been warned!\n\nReason: ${reason}\nWarnings: ${warningSymbols}\n\n⚠️ Warning: You will be kicked at 3 warnings!`, messageID);
+    sendMessage(threadID, `⚠️ تنبيه لـ ${nickname}!\n\nالسبب: ${reason}\nالتحذيرات: ${warningSymbols}\n\n⚠️ تحذير: ستصل لحد الطرد عند اكتمال 3 تحذيرات!`, messageID);
   }
 }
 
-// ... [Warning Management, Bans, etc. retained] ...
+// --- أوامر إدارة التحذيرات والحظر ---
 async function handleBannedCommand(threadID, messageID) {
   const bans = data.getBannedMembers(threadID);
-  let msg = `🚫 Banned (${bans.length})\n\n`;
-  bans.forEach((b, i) => msg += `${i+1}. ${b.nickname} (ID: ${b.uid})\nReason: ${b.reason}\n\n`);
+  let msg = `🚫 المحظورون (${bans.length})\n\n`;
+  bans.forEach((b, i) => msg += `${i+1}. ${b.nickname} (الآيدي: ${b.uid})\nالسبب: ${b.reason}\n\n`);
   sendMessage(threadID, msg, messageID);
 }
 
 async function handleAddWarningKeywordCommand(threadID, messageID, senderID, message) {
   if (!isAdmin(threadID, senderID)) return;
-  const word = message.replace(".addwarning ", "").trim();
-  if (data.addWarningKeyword(threadID, word)) sendMessage(threadID, `✅ Added: ${word}`, messageID);
+  const word = message.replace(/(?:\.إضافة_تحذير|\.addwarning)\s+/, "").trim();
+  if (data.addWarningKeyword(threadID, word)) sendMessage(threadID, `✅ تم إضافة الكلمة الممنوعة: ${word}`, messageID);
 }
 
 async function handleRemoveWarningKeywordCommand(threadID, messageID, senderID, message) {
   if (!isAdmin(threadID, senderID)) return;
-  const word = message.replace(".removeword ", "").trim();
-  if (data.removeWarningKeyword(threadID, word)) sendMessage(threadID, `✅ Removed: ${word}`, messageID);
+  const word = message.replace(/(?:\.حذف_كلمة|\.removeword)\s+/, "").trim();
+  if (data.removeWarningKeyword(threadID, word)) sendMessage(threadID, `✅ تم حذف الكلمة: ${word}`, messageID);
 }
 
 async function handleManualWarningCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target) return sendMessage(threadID, "❌ Usage: .warning @user [reason]", messageID);
-  const reason = event.body.replace(/^\.warning\s+@\w+\s*/, "") || "Manual";
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .تحذير @منشن [السبب]", messageID);
+  const reason = event.body.replace(/(?:\.تحذير|\.warning)\s+@\w+\s*/, "") || "تحذير إداري";
   await issueWarning(threadID, messageID, target, event, reason);
 }
 
 async function handleUnwarningCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target) return sendMessage(threadID, "❌ Usage: .unwarning @user", messageID);
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .إزالة_تحذير @منشن", messageID);
   data.deductWarning(threadID, target, isProtectedUser(senderID));
-  sendMessage(threadID, "✅ Warning removed.", messageID);
+  sendMessage(threadID, "✅ تم إزالة تحذير من العضو بنجاح.", messageID);
 }
 
 async function handleWarningListCommand(threadID, messageID) {
   const list = data.getAllWarnings(threadID);
-  let msg = "⚠️ Warnings:\n";
-  list.forEach(u => msg += `${u.nickname}: ${u.count}\n`);
+  let msg = "⚠️ قائمة التحذيرات:\n";
+  list.forEach(u => msg += `- ${u.nickname}: ${u.count} تحذيرات\n`);
   sendMessage(threadID, msg, messageID);
 }
 
 async function handleBanCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target || isProtectedUser(target)) return sendMessage(threadID, "❌ Invalid target.", messageID);
-  const reason = event.body.replace(/^\.ban\s+@\w+\s*/, "") || "Manual";
-  const res = data.banMember(threadID, target, "User", reason, "Admin");
+  if (!target || isProtectedUser(target)) return sendMessage(threadID, "❌ لا يمكن حظر هذا المستخدم.", messageID);
+  const reason = event.body.replace(/(?:\.حظر|\.ban)\s+@\w+\s*/, "") || "حظر إداري";
+  const res = data.banMember(threadID, target, "عضو", reason, "مشرف");
   if(res) {
-    sendMessage(threadID, `🔨 Banned. ID: ${res.uid}`, messageID);
+    sendMessage(threadID, `🔨 تم حظر العضو بنجاح. آيدي الحظر: ${res.uid}`, messageID);
     setTimeout(() => api.removeUserFromGroup(target, threadID, ()=>{}), 1000);
   }
 }
 
 async function handleUnbanCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
-  const arg = event.body.replace(".unban ", "").trim();
+  const arg = event.body.replace(/(?:\.رفع_حظر|\.unban)\s+/, "").trim();
   const target = Object.keys(event.mentions || {})[0] || arg;
-  if (data.unbanMember(threadID, target)) sendMessage(threadID, "✅ Unbanned.", messageID);
-  else sendMessage(threadID, "❌ Not found.", messageID);
+  if (data.unbanMember(threadID, target)) sendMessage(threadID, "✅ تم رفع الحظر عن العضو بنجاح.", messageID);
+  else sendMessage(threadID, "❌ لم يتم العثور على سجل الحظر.", messageID);
 }
 
 async function handleWarExtremeCommand(threadID, messageID, senderID) {
   if (!isAdmin(threadID, senderID)) return;
   data.setWarExtremeMode(threadID, true);
-  sendMessage(threadID, "⚠️ WAR MODE ON", messageID);
+  sendMessage(threadID, "⚠️ تم تفعيل وضع الحرب القصوى!", messageID);
 }
 
 async function handlePeaceCommand(threadID, messageID, senderID) {
   if (!isAdmin(threadID, senderID)) return;
   data.setWarExtremeMode(threadID, false);
-  sendMessage(threadID, "✅ PEACE MODE ON", messageID);
+  sendMessage(threadID, "✅ تم تفعيل وضع السلام!", messageID);
 }
 
 async function handleKickCommand(threadID, messageID, senderID, event) {
   if (!isAdmin(threadID, senderID)) return;
   const target = Object.keys(event.mentions || {})[0];
-  if (!target || isProtectedUser(target)) return sendMessage(threadID, "❌ Cannot kick.", messageID);
-  sendMessage(threadID, "👢 Kicking...", messageID);
+  if (!target || isProtectedUser(target)) return sendMessage(threadID, "❌ لا يمكن طرد هذا المستخدم.", messageID);
+  sendMessage(threadID, "👢 جاري طرد العضو...", messageID);
   setTimeout(() => api.removeUserFromGroup(target, threadID, ()=>{}), 1000);
 }
 
-// ... [Pending List Logic - UPDATED] ...
+// --- إدارة الطلبات ومشرفي القروب ---
 async function handlePendingListCommand(threadID, messageID, senderID) {
   if (!isAdmin(threadID, senderID)) return;
-  sendMessage(threadID, "❌ API limitation: Cannot list pending members directly. Use .approve <UID> OR .approve <Name> (Case Sensitive).", messageID);
+  sendMessage(threadID, "❌ لا يمكن عرض قائمة الطلبات مباشرة. استعمل الأمر: .قبول <الاسم تماماً> أو .قبول <الآيدي>", messageID);
 }
 
 async function handleApproveCommand(threadID, messageID, senderID, message) {
   if (!isAdmin(threadID, senderID)) return;
-  
-  // Extract content after .approve
-  // Handles: .approve 1000123... (UID) OR .approve John Doe (Name)
-  const arg = message.replace(/^\.approve\s+|^\.accept\s+/, "").trim();
+  const arg = message.replace(/(?:\.قبول|\.approve|\.accept)\s+/, "").trim();
   
   if (!arg) {
-    sendMessage(threadID, "❌ Usage: .approve <UID> or <Exact Name>", messageID);
+    sendMessage(threadID, "❌ الاستخدام الصحيح: .قبول <الآيدي> أو <الاسم الحقيقي>", messageID);
     return;
   }
 
-  // Check if arg is purely numbers -> assume UID
   if (/^\d+$/.test(arg)) {
     api.addUserToGroup(arg, threadID, (err) => {
-      if (err) sendMessage(threadID, `❌ Failed to add user ID ${arg}. Check if valid.`, messageID);
-      else sendMessage(threadID, `✅ Added user ID: ${arg}`, messageID);
+      if (err) sendMessage(threadID, `❌ فشل إضافة العضو بالآيدي ${arg}.`, messageID);
+      else sendMessage(threadID, `✅ تم إضافة العضو بنجاح بالآيدي: ${arg}`, messageID);
     });
     return;
   }
 
-  // It's a NAME. Search for it.
-  sendMessage(threadID, `🔍 Searching for user "${arg}"...`, messageID);
+  sendMessage(threadID, `🔍 جاري البحث عن المستخدم "${arg}"...`, messageID);
   
   api.getUserID(arg, (err, users) => {
-    if (err) {
-      sendMessage(threadID, "❌ Error searching for user.", messageID);
+    if (err || !users || users.length === 0) {
+      sendMessage(threadID, `❌ لم يتم العثور على المستخدم "${arg}". حاول استخدام الآيدي مباشرة.`, messageID);
       return;
     }
-    
-    // API returns array of matches: [{ userID: '...', name: '...', ... }]
-    // We filter for EXACT CASE-SENSITIVE match to be safe
-    const exactMatches = users.filter(u => u.name === arg);
-    
-    if (exactMatches.length === 0) {
-      sendMessage(threadID, `❌ User "${arg}" not found. Try getting their UID from profile link.`, messageID);
-    } else if (exactMatches.length > 1) {
-      sendMessage(threadID, `⚠️ Multiple users found with exact name "${arg}". Please use UID instead.`, messageID);
-    } else {
-      const targetUID = exactMatches[0].userID;
-      api.addUserToGroup(targetUID, threadID, (addErr) => {
-        if (addErr) sendMessage(threadID, `❌ Failed to add ${arg}.`, messageID);
-        else sendMessage(threadID, `✅ Approved/Added: ${arg}`, messageID);
-      });
-    }
+    const targetUID = users[0].userID;
+    api.addUserToGroup(targetUID, threadID, (addErr) => {
+      if (addErr) sendMessage(threadID, `❌ فشل إضافة العضو.`, messageID);
+      else sendMessage(threadID, `✅ تمت الموافقة وإضافة: ${arg}`, messageID);
+    });
   });
 }
 
-async function handleDeclineCommand(threadID, messageID, senderID, message) {
-  // Decline is impossible via name lookup effectively because we can't "decline" 
-  // someone who isn't in a pending list we can access.
-  sendMessage(threadID, "❌ Decline not supported. Please use FB App.", messageID);
+async function handleAddAdminCommand(threadID, messageID, senderID, event) {
+  if (!isProtectedUser(senderID)) return;
+  const target = Object.keys(event.mentions || {})[0];
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .إضافة_مشرف @منشن", messageID);
+  api.changeAdminStatus(threadID, target, true, (err) => {
+    if (err) sendMessage(threadID, "❌ فشل ترقية العضو لمشرف.", messageID);
+    else sendMessage(threadID, "✅ تمت ترقية العضو وأصبح مشرفاً في القروب.", messageID);
+  });
 }
 
-// ... [Play, Unsent, Server, etc. retained] ...
+async function handleRemoveAdminCommand(threadID, messageID, senderID, event) {
+  if (!isProtectedUser(senderID)) return;
+  const target = Object.keys(event.mentions || {})[0];
+  if (!target) return sendMessage(threadID, "❌ الاستخدام الصحيح: .حذف_مشرف @منشن", messageID);
+  api.changeAdminStatus(threadID, target, false, (err) => {
+    if (err) sendMessage(threadID, "❌ فشل سحب الإشراف.", messageID);
+    else sendMessage(threadID, "✅ تم سحب صلاحية الإشراف من العضو.", messageID);
+  });
+}
+
+async function handleAdminListCommand(threadID, messageID) {
+  const info = await getThreadInfo(threadID);
+  if (!info) return;
+  let msg = `👑 مشرفو القروب (${info.adminIDs.length}):\n\n`;
+  for (const admin of info.adminIDs) {
+    const user = await getUserInfo(admin.id);
+    msg += `- ${user?.name || admin.id}\n`;
+  }
+  sendMessage(threadID, msg, messageID);
+}
+
+async function handleBanAllCommand(threadID, messageID, senderID) {
+  if (!isProtectedUser(senderID)) return;
+  const info = await getThreadInfo(threadID);
+  if (!info) return;
+  sendMessage(threadID, "⚠️ تحذير: جاري حظر جميع أعضاء القروب...", messageID);
+  for (const uid of info.participantIDs) {
+    if (uid !== botUserId && !isProtectedUser(uid)) {
+      data.banMember(threadID, uid, "عضو", "حظر جماعي", "المطور");
+      api.removeUserFromGroup(uid, threadID, ()=>{});
+    }
+  }
+  sendMessage(threadID, "✅ تم تنفيذ حظر الجميع.", messageID);
+}
+
+async function handleRemoveAllBansCommand(threadID, messageID, senderID) {
+  if (!isAdmin(threadID, senderID)) return;
+  const res = data.removeAllBans(threadID);
+  sendMessage(threadID, `✅ تم حذف جميع سجلات الحظر (${res.count} سجل).`, messageID);
+}
+
+async function handleRemoveAllWarningsCommand(threadID, messageID, senderID) {
+  if (!isAdmin(threadID, senderID)) return;
+  const res = data.removeAllWarnings(threadID);
+  sendMessage(threadID, `✅ تم مسح جميع التحذيرات (${res.count} مستخدم).`, messageID);
+}
+
 async function handleServerCommand(threadID, messageID) {
   const info = data.getServerInfo(threadID);
-  sendMessage(threadID, info ? `🖥️ Server Info:\n${info}` : "❌ No server info set.", messageID);
+  sendMessage(threadID, info ? `🖥️ معلومات السيرفر:\n${info}` : "❌ لم يتم تعيين معلومات للسيرفر بعد.", messageID);
 }
 
 async function handleServerInfoCommand(threadID, messageID, senderID, message) {
   if (!isAdmin(threadID, senderID)) return;
-  const info = message.replace(/^\.serverinfo\s+/, "").trim();
+  const info = message.replace(/(?:\.معلومات_السيرفر|\.serverinfo)\s+/, "").trim();
   data.setServerInfo(threadID, info);
-  sendMessage(threadID, "✅ Server info updated.", messageID);
+  sendMessage(threadID, "✅ تم تحديث معلومات السيرفر بنجاح.", messageID);
+}
+
+async function handleShutdownCommand(threadID, messageID, senderID) {
+  if (!isProtectedUser(senderID)) return;
+  sendMessage(threadID, "🛑 جاري إيقاف تشغيل البوت...", messageID);
+  setTimeout(() => process.exit(0), 1000);
 }
 
 async function handleInvalidCommand(threadID, messageID, senderID, message) {
   if (isProtectedUser(senderID)) return;
-  const key = `${threadID}_${senderID}`;
-  const now = Date.now();
-  if (!spamDetection.has(key)) spamDetection.set(key, { commands: [], lastReset: now });
-  const userSpam = spamDetection.get(key);
-  if (now - userSpam.lastReset > 10000) { userSpam.commands = []; userSpam.lastReset = now; }
-  userSpam.commands.push(message);
-  if (userSpam.commands.length >= 5) {
-    await issueWarning(threadID, messageID, senderID, { body: message }, "Spamming invalid commands", true);
-    spamDetection.delete(key);
-  } else if (userSpam.commands.length === 3) {
-    sendMessage(threadID, "⚠️ Please stop spamming invalid commands. Use .help", messageID);
-  } else {
-    sendMessage(threadID, "❓ Unknown command. Type .help for list.", messageID);
-  }
+  sendMessage(threadID, "❓ أمر غير معروف. اكتب .مساعدة لعرض قائمة الأوامر المتاحة.", messageID);
 }
 
 async function handleUnsendMessage(event) {
@@ -698,23 +665,20 @@ async function handleUnsendMessage(event) {
   if (!cached) return;
   
   const threadInfo = await getThreadInfo(threadID);
-  const nickname = threadInfo?.nicknames?.[senderID] || "User";
+  const nickname = threadInfo?.nicknames?.[senderID] || "عضو";
   const hasImages = cached.attachments && cached.attachments.some(att => att.type === 'photo');
   
   if (hasImages) {
     const photo = cached.attachments.find(att => att.type === 'photo');
     if (photo && photo.url) {
       lastUnsentImage.set(threadID, { url: photo.url, sender: nickname, senderID: senderID, timestamp: Date.now() });
-      api.sendMessage(`🖼️ UNSENT IMAGE REPORT\nUser: ${nickname}\nURL: ${photo.url}`, DEVELOPER_ID, () => {});
-      
-      // Auto-repost logic
       try {
         const imagePath = path.join(__dirname, "cache", `unsent_${messageID}.jpg`);
         const response = await axios({ url: photo.url, responseType: "stream" });
         const writer = fs.createWriteStream(imagePath);
         response.data.pipe(writer);
         writer.on('finish', () => {
-          api.sendMessage({ body: `⚠️ ${nickname} unsent this image:`, attachment: fs.createReadStream(imagePath) }, threadID, () => {
+          api.sendMessage({ body: `⚠️ قام ${nickname} بحذف هذه الصورة:`, attachment: fs.createReadStream(imagePath) }, threadID, () => {
             fs.unlink(imagePath, () => {});
           });
         });
@@ -722,51 +686,42 @@ async function handleUnsendMessage(event) {
     }
     return;
   }
-  
-  const key = `unsent_${threadID}_${senderID}`;
-  const now = Date.now();
-  if (!unsentSpamTracking.has(key)) unsentSpamTracking.set(key, { count: 0, last: now });
-  const track = unsentSpamTracking.get(key);
-  if (now - track.last > 60000) { track.count = 0; }
-  track.count++;
-  track.last = now;
-  if (track.count >= 5) {
-    await issueWarning(threadID, null, senderID, {body: ""}, "Spamming unsent messages", true);
-    unsentSpamTracking.delete(key);
-    return;
-  }
-  sendMessage(threadID, `⚠️ ${nickname} unsent:\n"${cached.body}"`);
+  sendMessage(threadID, `⚠️ قام ${nickname} بحذف هذه الرسالة:\n"${cached.body}"`);
 }
 
 async function handleUnsentCommand(threadID, messageID) {
   const unsentData = lastUnsentImage.get(threadID);
-  if (!unsentData || Date.now() - unsentData.timestamp > 86400000) return sendMessage(threadID, "❌ No record.", messageID);
+  if (!unsentData || Date.now() - unsentData.timestamp > 86400000) return sendMessage(threadID, "❌ لا توجد صور محذوفة حديثاً.", messageID);
   
   const imagePath = path.join(__dirname, "cache", `manual_unsent_${Date.now()}.jpg`);
   const response = await axios({ url: unsentData.url, responseType: "stream" });
   const writer = fs.createWriteStream(imagePath);
   response.data.pipe(writer);
   writer.on('finish', () => {
-    api.sendMessage({ body: `🖼️ Last unsent from ${unsentData.sender}:`, attachment: fs.createReadStream(imagePath) }, threadID, () => fs.unlink(imagePath, ()=>{}));
+    api.sendMessage({ body: `🖼️ آخر صورة حذفها ${unsentData.sender}:`, attachment: fs.createReadStream(imagePath) }, threadID, () => fs.unlink(imagePath, ()=>{}));
   });
 }
 
 async function handlePlayCommand(threadID, messageID, senderID, message) {
-  const url = message.replace(/^\.play\s+/, "").trim();
-  if (!url || !ytdl.validateURL(url)) return sendMessage(threadID, "❌ Invalid URL.", messageID);
-  sendMessage(threadID, "🎵 Processing...", messageID);
+  const url = message.replace(/(?:\.تشغيل|\.play)\s+/, "").trim();
+  if (!url || !ytdl.validateURL(url)) return sendMessage(threadID, "❌ رابط يوتيوب غير صالح.", messageID);
+  sendMessage(threadID, "🎵 جاري معالجة وتحميل الصوت...", messageID);
   try {
     const info = await ytdl.getInfo(url);
-    if (parseInt(info.videoDetails.lengthSeconds) > 240) return sendMessage(threadID, "❌ > 4 mins.", messageID);
+    if (parseInt(info.videoDetails.lengthSeconds) > 240) return sendMessage(threadID, "❌ الفديو طويل جداً (أقصى حد 4 دقائق).", messageID);
     const filePath = path.join(__dirname, "cache", `audio_${Date.now()}.mp3`);
     ytdl(url, { quality: 'highestaudio', filter: 'audioonly' }).pipe(fs.createWriteStream(filePath)).on('finish', () => {
       api.sendMessage({ body: `🎵 ${info.videoDetails.title}`, attachment: fs.createReadStream(filePath) }, threadID, () => fs.unlink(filePath, ()=>{}));
     });
-  } catch (e) { sendMessage(threadID, "❌ Error.", messageID); }
+  } catch (e) { sendMessage(threadID, "❌ حدث خطأ أثناء تحميل الصوت.", messageID); }
+}
+
+async function handleVonCommand(threadID, messageID) {
+  sendMessage(threadID, "🌐 رابط موقع Von:\nhttps://www.von.gov.dz", messageID);
 }
 
 async function handleGroupEvent(event) {
-  const { threadID, logMessageType, logMessageData, author } = event;
+  const { threadID, logMessageType, logMessageData } = event;
   const info = await getThreadInfo(threadID);
   if (logMessageType === "log:subscribe") {
     await updateGroupMembers(threadID, info);
@@ -774,30 +729,20 @@ async function handleGroupEvent(event) {
     for (const uid of added) {
       if (uid === botUserId) {
         api.changeNickname("TENSURA", threadID, botUserId, ()=>{});
-        setTimeout(async () => {
-           const thread = await getThreadInfo(threadID);
-           thread.adminIDs.forEach(a => {
-             if(![DEVELOPER_ID, SUPER_ADMIN_ID, botUserId].includes(a.id)) api.changeAdminStatus(threadID, a.id, false, ()=>{});
-           });
-        }, 5000);
         continue;
       }
       if (data.isBanned(threadID, uid)) {
-        sendMessage(threadID, "🚫 Banned user detected.");
+        sendMessage(threadID, "🚫 تنبيه: تم رصد عضو محظور يحاول الدخول وتم طرده.");
         setTimeout(() => api.removeUserFromGroup(uid, threadID, ()=>{}), 1000);
         continue;
       }
       const user = await getUserInfo(uid);
-      const name = info.nicknames?.[uid] || user?.name || "User";
+      const name = info.nicknames?.[uid] || user?.name || "عضو";
       if (!isAdmin(threadID, uid)) data.addMember(threadID, uid, name);
       sendMessage(threadID, data.getGreeting(threadID).replace("{name}", name));
     }
   }
-  // Other events (unsubscribe, admins) handled similarly...
 }
-
-// ... [Helpers updateGroupMembers, getThreadInfo, getUserInfo, sendMessage, DailyReset, etc. - Implied] ...
-// (These are standard and remain unchanged from previous versions)
 
 async function updateGroupMembers(threadID, threadInfo) {
   if (!threadInfo?.participantIDs) return;
@@ -829,17 +774,16 @@ async function performDailyReset() {
   const kicks = data.resetDailyAttendance();
   kicks.forEach(k => {
     if(k.userID !== botUserId) {
-      data.banMember(k.threadID, k.userID, k.nickname, k.reason, "System");
-      sendMessage(k.threadID, `🚫 Auto-kicked ${k.nickname}`);
+      data.banMember(k.threadID, k.userID, k.nickname, k.reason, "النظام");
+      sendMessage(k.threadID, `🚫 تم طرد ${k.nickname} تلقائياً بسبب الغياب المتكرر.`);
       setTimeout(() => api.removeUserFromGroup(k.userID, k.threadID, ()=>{}), 1000);
     }
   });
 }
 
 function startPeriodicAppStateSave() { setInterval(() => api && saveAppState(api.getAppState()), 3600000); }
-function startPeriodicBanCheck() { setInterval(() => data.checkAndLiftExpiredBans().forEach(b => sendMessage(b.threadID, `⏰ Ban lifted: ${b.nickname}`)), 60000); }
-
-async function scanMissedVulgarWords() { /* (Previously defined robust scanning logic) */ }
+function startPeriodicBanCheck() { setInterval(() => data.checkAndLiftExpiredBans().forEach(b => sendMessage(b.threadID, `⏰ تم رفع الحظر تلقائياً عن: ${b.nickname}`)), 60000); }
 
 process.on("SIGINT", () => { if(api) saveAppState(api.getAppState()); process.exit(0); });
 initializeBot().catch(e => console.error(e));
+ 
