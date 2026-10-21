@@ -16,6 +16,8 @@
   "author": "🪻💤 𝑲𝒂𝒎𝒆𝒍 𝑩𝒐𝒖𝒎𝒓𝒅𝒂𝒔𝒔𝒊",
   "license": "ISC",
   "dependencies": {
-    "@dongdev/fca-unofficial": "^2.0.32"
+    "@dongdev/fca-unofficial": "^2.0.32",
+    "axios": "^1.7.0",
+    "ytdl-core": "^4.11.5"
   }
 }
