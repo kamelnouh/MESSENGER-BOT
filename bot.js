@@ -12,10 +12,10 @@ const data = new DataManager();
 // --- ADMIN CONFIGURATION ---
 const DEVELOPER_ID = "61593976169222";
 const SUPER_ADMIN_ID = "61593976169222";
-const BOT_USER_ID_TO_DETECT = "DON'T MIND THIS";
+const BOT_USER_ID_TO_DETECT = "61595110707207";
 
 let ADMIN_IDS = [
-  "ADMIN-ID"
+  "61593976169222"
 ];
 // ---------------------------
 
