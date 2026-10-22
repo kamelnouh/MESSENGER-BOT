@@ -48,3 +48,57 @@ test("welcomes a joining member by name in Arabic and sends the message to their
     }
   ]);
 });
+
+test("sends a separate named welcome to each member in one join event", async () => {
+  const groupId = "group-multiple-members";
+  const members = [
+    { userFbId: "member-101", name: "سارة" },
+    { userFbId: "member-202", name: "عمر" }
+  ];
+  const greeting = "أهلًا {name}، نورت المجموعة!";
+  const sentMessages = [];
+  const greetingGroups = [];
+
+  await handleGroupEvent(
+    {
+      threadID: groupId,
+      logMessageType: "log:subscribe",
+      logMessageData: {
+        addedParticipants: members.map(({ userFbId }) => ({ userFbId }))
+      }
+    },
+    {
+      data: {
+        isBanned: () => false,
+        addMember: () => {},
+        getGreeting(threadID) {
+          greetingGroups.push(threadID);
+          return greeting;
+        }
+      },
+      getThreadInfo: async () => ({ nicknames: {} }),
+      updateGroupMembers: async () => {},
+      getUserInfo: async userId => ({
+        name: members.find(member => member.userFbId === userId).name
+      }),
+      isAdmin: () => false,
+      sendMessage(threadID, message) {
+        sentMessages.push({ threadID, message });
+      },
+      api: { changeNickname: () => {} },
+      botUserId: "bot-user"
+    }
+  );
+
+  assert.deepEqual(greetingGroups, [groupId, groupId]);
+  assert.deepEqual(sentMessages, [
+    {
+      threadID: groupId,
+      message: "أهلًا سارة، نورت المجموعة!"
+    },
+    {
+      threadID: groupId,
+      message: "أهلًا عمر، نورت المجموعة!"
+    }
+  ]);
+});
