@@ -9,3 +9,7 @@ cd "$PROJECT_ROOT"
 npm test
 node --check bot.js
 node --check dataManager.js
+node --check appstateManager.js
+node --check fix-appstate.js
+node --check login-with-credentials.js
+node --check commands/registry.js

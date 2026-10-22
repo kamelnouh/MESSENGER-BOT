@@ -1,40 +1,31 @@
-// Normalizes an existing appstate.json file; it does not log in or create a session.
-const fs = require('fs');
+// Validates cookie JSON and writes a separate normalized copy by default.
+// Use --replace only when needed; it first preserves the original as a backup.
+const fs = require("node:fs");
+const path = require("node:path");
+const { readAppState, writeAppState } = require("./appstateManager");
 
-console.log('🔧 Fixing appstate.json format...\n');
+const sourcePath = path.resolve("appstate.json");
+const outputPath = path.resolve("appstate.normalized.json");
+const replaceOriginal = process.argv.includes("--replace");
 
 try {
-  const appState = JSON.parse(fs.readFileSync('appstate.json', 'utf8'));
-  
-  const fixedAppState = appState.map(cookie => {
-    const fixed = {
-      key: cookie.name || cookie.key,
-      value: cookie.value,
-      expires: cookie.expirationDate ? String(Math.floor(cookie.expirationDate)) : cookie.expires,
-      domain: cookie.domain,
-      path: cookie.path || '/',
-      secure: cookie.secure || false,
-      httponly: cookie.httpOnly || cookie.httponly || false
-    };
-    
-    if (cookie.sameSite) {
-      fixed.sameSite = cookie.sameSite;
+  const cookies = readAppState(sourcePath);
+
+  if (replaceOriginal) {
+    const backupPath = `${sourcePath}.backup-${Date.now()}`;
+    fs.copyFileSync(sourcePath, backupPath, fs.constants.COPYFILE_EXCL);
+    fs.chmodSync(backupPath, 0o600);
+    writeAppState(sourcePath, cookies);
+    console.log("Cookie JSON normalized; the original was preserved in a private backup.");
+  } else {
+    if (fs.existsSync(outputPath)) {
+      throw new Error("appstate.normalized.json already exists; it was left unchanged.");
     }
-    
-    if (cookie.hostOnly !== undefined) {
-      fixed.hostOnly = cookie.hostOnly;
-    }
-    
-    return fixed;
-  });
-  
-  fs.writeFileSync('appstate.json', JSON.stringify(fixedAppState, null, 2));
-  
-  console.log('✅ appstate.json has been converted to the correct format!');
-  console.log(`✅ Converted ${fixedAppState.length} cookies`);
-  console.log('\n🚀 You can now run the bot with: npm start\n');
-  
+    writeAppState(outputPath, cookies);
+    console.log("Validated cookie JSON and created appstate.normalized.json.");
+    console.log("The original appstate.json was not changed.");
+  }
 } catch (error) {
-  console.error('❌ Error fixing appstate:', error.message);
-  process.exit(1);
+  console.error("Could not normalize session JSON:", error.message);
+  process.exitCode = 1;
 }

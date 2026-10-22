@@ -81,25 +81,21 @@ cd MESSENGER-BOT-main
 
 ```bash
 npm install
-npm install axios ytdl-core
 ```
 
-**3. Prepare login credentials or session state:**
-
-Choose one of the following:
-
-- Put a valid `appstate.json` file in the project root, or
-- Run the helper login script:
+**3. Prepare a cookie session as JSON:**
 
 ```bash
 node login-with-credentials.js
 ```
 
-If your session file needs formatting fixes, run:
+This helper only validates an existing `appstate.json`; it does not request a password or print cookie values. The session must be a non-empty JSON cookie array. To create a normalized copy without changing the original, run:
 
 ```bash
 node fix-appstate.js
 ```
+
+Use `node fix-appstate.js --replace` only when you intend to replace the session file; the script first creates a timestamped backup. Keep all session files private.
 
 **4. Start the bot:**
 
@@ -190,8 +186,10 @@ MESSENGER-BOT-main/
 | `package.json` | Declares npm dependencies and the `start` and `test` scripts. |
 | `package-lock.json` | Records exact npm dependency versions. npm generates this file; do not add comments to it. |
 | `.replit` | Selects Node.js 20 and points post-merge checks at `scripts/post-merge.sh`. |
+| `.gitignore` | Excludes local cookie-session files and temporary cache output from new Git changes. It does not untrack files already committed. |
 | `bot.js` | Starts the existing group-capable Messenger client, handles incoming group events, and routes built-in and modular commands. |
-| `appstate.json` | Local Messenger session data. Treat it as a credential: do not publish, paste, or share it. |
+| `appstateManager.js` | Parses, validates, normalizes, and safely writes cookie-session JSON without logging its values. |
+| `appstate.json` | Local Messenger cookie-session JSON. Treat it as a credential: do not publish, paste, or share it. |
 | `commands/registry.js` | Maps command text such as `.زواج` and `.love` to a command module and loads that module only when invoked. |
 | `commands/marriage.js` | Implements `.زواج` / `.marriage`. |
 | `commands/divorce.js` | Implements `.طلاق` / `.divorce`. |
@@ -212,9 +210,9 @@ MESSENGER-BOT-main/
 | `data/pendingMembers.json` | Pending group-member approval records. |
 | `tests/` | Offline tests for data handling, group-event behavior, and command registration. Tests do not log in to Messenger. |
 | `scripts/post-merge.sh` | Runs local tests and JavaScript syntax checks after a merge. It currently does not install dependencies because the package security firewall blocks the existing dependency tree. |
-| `fix-appstate.js` | Legacy utility that normalizes the format of an existing `appstate.json`. |
-| `login-with-credentials.js` | Legacy interactive login helper; it is not used by `npm start`. Avoid entering or sharing account credentials. |
-| `HOW_TO_GET_APPSTATE.md` | Existing guide describing session-file setup. |
+| `fix-appstate.js` | Validates and creates a normalized copy; it only replaces the original when explicitly passed `--replace`, after preserving a backup. |
+| `login-with-credentials.js` | Compatibility helper that validates cookie JSON without asking for an account password. |
+| `HOW_TO_GET_APPSTATE.md` | Explains the JSON session-file format and safe handling. |
 | `fca-config.json` | Legacy client configuration file; the current runtime does not reference it. |
 | `offlineMessages.json` | Legacy JSON file; the current runtime does not reference it. |
 | `pendingMembers.json` | Legacy root-level file; active pending-member state is stored under `data/` by `dataManager.js`. |
@@ -222,7 +220,9 @@ MESSENGER-BOT-main/
 
 ### How commands connect
 
-The existing group-capable Messenger client is declared as a dependency in `package.json` and loaded by `initializeBot()` in `bot.js`. It supplies the `api` object and group events. `bot.js` parses the command after the dot, asks `commands/registry.js` for the matching module, and passes the API, event, sender, group, data manager, and message sender into that module's `execute()` function. Command files do not create a separate login or session.
+The existing group-capable Messenger client is declared as a dependency in `package.json` and loaded by `initializeBot()` in `bot.js`. It receives the parsed cookie array from `appstateManager.js`, supplies the `api` object and group events, and returns refreshed cookie data that is saved back as JSON. `bot.js` parses the command after the dot, asks `commands/registry.js` for the matching module, and passes the API, event, sender, group, data manager, and message sender into that module's `execute()` function. Command files do not create a separate login or session.
+
+`appstate.json` is expected to contain a non-empty JSON array of cookies. The reader also accepts an object with an `appState` or `cookies` array and normalizes common browser fields (`name` to `key`, `expirationDate` to `expires`, and `httpOnly` to `httponly`) while preserving other fields. Invalid JSON or incomplete cookie entries stop startup with a generic error; cookie contents are never written to logs. Session saves use an atomic temporary file with restrictive permissions.
 
 The five modular commands are `.زواج`, `.طلاق`, `.حب`, `.خطبة`, and `.كذب`. They use a profile thumbnail returned by the Messenger client when available. Image rendering is optional: if the `canvas` package or an avatar is unavailable, the command sends its text fallback. `canvas` is not currently declared in `package.json`, so generated image cards are not enabled by the current dependency manifest.
 

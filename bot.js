@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const DataManager = require("./dataManager");
 const { getCommandName, loadCommand } = require("./commands/registry");
+const { readAppState, writeAppState } = require("./appstateManager");
 
 const APPSTATE_FILE = "appstate.json";
 const COMMAND_COOLDOWN = 3000;
@@ -39,9 +40,9 @@ function isAdmin(threadID, userID) {
 function loadAppState() {
   if (fs.existsSync(APPSTATE_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(APPSTATE_FILE, "utf8"));
+      return readAppState(APPSTATE_FILE);
     } catch (error) {
-      console.error("✗ Failed to load appstate:", error.message);
+      console.error("✗ Failed to load appstate JSON:", error.message);
       return null;
     }
   }
@@ -50,9 +51,9 @@ function loadAppState() {
 
 function saveAppState(appState) {
   try {
-    fs.writeFileSync(APPSTATE_FILE, JSON.stringify(appState, null, 2));
+    writeAppState(APPSTATE_FILE, appState);
   } catch (error) {
-    console.error("✗ Failed to save appstate:", error.message);
+    console.error("✗ Failed to save appstate JSON:", error.message);
   }
 }
 
@@ -60,7 +61,7 @@ async function initializeBot() {
   const login = require("@dongdev/fca-unofficial");
   const appState = loadAppState();
   if (!appState) {
-    console.error("=== LOGIN REQUIRED ===\nPlease create appstate.json");
+    console.error("=== SESSION JSON REQUIRED ===\nAdd a valid cookie array to appstate.json.");
     process.exit(1);
   }
 

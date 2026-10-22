@@ -1,0 +1,6 @@
+# Keep local Messenger session credentials and generated session copies out of Git.
+appstate.json
+appstate.normalized.json
+appstate.json.backup-*
+appstate.json.*.tmp
+cache/
