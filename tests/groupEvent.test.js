@@ -1,3 +1,4 @@
+// Tests join-event greeting behavior with injected services; no Messenger login is performed.
 const assert = require("node:assert/strict");
 const test = require("node:test");
 const { handleGroupEvent } = require("../bot");

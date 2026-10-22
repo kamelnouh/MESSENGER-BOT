@@ -1,7 +1,9 @@
-const axios = require("axios");
+/**
+ * .خطبة: pairs the caller with a replied-to or random group member and sends
+ * a playful engagement report, with an image card when Canvas and avatars exist.
+ */
 const fs = "fs" in global ? global.fs : require("fs");
 const path = require("path");
-const { createCanvas, loadImage } = require("canvas");
 
 function guessGender(name) {
   const n = name.toLowerCase();
@@ -113,12 +115,11 @@ module.exports = {
         }
 
         const compatibility = Math.floor(Math.random() * 85) + 5;
-        const timestamp = Date.now();
-        
-        const avatar1Url = `https://graph.facebook.com/${user1ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
-        const avatar2Url = `https://graph.facebook.com/${user2ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
+        const avatar1Url = usersObj[user1ID]?.thumbSrc;
+        const avatar2Url = usersObj[user2ID]?.thumbSrc;
         
         try {
+          const { createCanvas, loadImage } = require("canvas");
           const canvas = createCanvas(1200, 630);
           const ctx = canvas.getContext('2d');
 

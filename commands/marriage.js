@@ -1,7 +1,9 @@
-const axios = require("axios");
+/**
+ * .زواج: pairs the caller with a replied-to or random group member and sends
+ * a playful marriage report, with an image card when Canvas and avatars exist.
+ */
 const fs = require("fs");
 const path = require("path");
-const { createCanvas, loadImage } = require("canvas");
 
 // دالة ذكية لتخمين الجنس بناءً على الاسم أو الحساب للكوميديا الجزائرية
 function guessGender(name) {
@@ -182,14 +184,12 @@ module.exports = {
         }
 
         const compatibility = Math.floor(Math.random() * 85) + 5;
-        const timestamp = Date.now();
-
-        const avatar1Url = `https://graph.facebook.com/${user1ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
-
-        const avatar2Url = `https://graph.facebook.com/${user2ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
+        const avatar1Url = usersObj[user1ID]?.thumbSrc;
+        const avatar2Url = usersObj[user2ID]?.thumbSrc;
 
         try {
           // --- تصميم البطاقة عبر الـ Canvas ---
+          const { createCanvas, loadImage } = require("canvas");
           const canvas = createCanvas(1200, 630);
           const ctx = canvas.getContext('2d');
 

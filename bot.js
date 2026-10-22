@@ -1,6 +1,8 @@
+// Messenger bot runtime: starts the group client and routes built-in and modular commands.
 const fs = require("fs");
 const path = require("path");
 const DataManager = require("./dataManager");
+const { getCommandName, loadCommand } = require("./commands/registry");
 
 const APPSTATE_FILE = "appstate.json";
 const COMMAND_COOLDOWN = 3000;
@@ -188,7 +190,56 @@ async function handleMessage(event) {
   // أوامر طلبات الانضمام
   else if (message === ".الطلبات" || message === ".pendinglist") await handlePendingListCommand(threadID, messageID, senderID);
   else if (message.startsWith(".قبول") || message.startsWith(".approve")) await handleApproveCommand(threadID, messageID, senderID, message);
-  else await handleInvalidCommand(threadID, messageID, senderID, message);
+  else if (!(await dispatchCommandModule(event, message))) await handleInvalidCommand(threadID, messageID, senderID, message);
+}
+
+async function dispatchCommandModule(event, message) {
+  const commandName = getCommandName(message);
+  if (!commandName) return false;
+
+  let command;
+  try {
+    command = loadCommand(commandName);
+  } catch (error) {
+    console.error(`Failed to load command .${commandName}:`, error.message);
+    sendMessage(
+      event.threadID,
+      `❌ تعذر تحميل الأمر .${commandName}. تحقق من ملف الأمر ومكتبته الاختيارية.`,
+      event.messageID
+    );
+    return true;
+  }
+
+  if (!command) return false;
+  if (command.developerOnly && !isDeveloper(event.senderID)) {
+    sendMessage(event.threadID, "❌ هذا الأمر مخصص للمطور فقط.", event.messageID);
+    return true;
+  }
+  if (command.adminOnly && !isAdmin(event.threadID, event.senderID)) {
+    sendMessage(event.threadID, "❌ هذا الأمر مخصص لمشرفي المجموعة.", event.messageID);
+    return true;
+  }
+
+  try {
+    await command.execute({
+      api,
+      event,
+      args: message.trim().split(/\s+/).slice(1),
+      data,
+      senderID: event.senderID,
+      threadID: event.threadID,
+      messageID: event.messageID,
+      sendMessage
+    });
+  } catch (error) {
+    console.error(`Command .${commandName} failed:`, error);
+    sendMessage(
+      event.threadID,
+      `❌ تعذر تنفيذ الأمر .${commandName}.`,
+      event.messageID
+    );
+  }
+  return true;
 }
 
 function checkCooldown(senderID, threadID) {
@@ -209,6 +260,11 @@ async function handleHelpCommand(threadID, messageID, senderID, message) {
   const userCommands = [
     ".مساعدة - عرض قائمة الأوامر هذه",
     ".فحص - التحقق من أن البوت يعمل",
+    ".زواج - اختيار عضو وإرسال تقرير زواج مرح",
+    ".طلاق - اختيار عضو وإرسال تقرير طلاق مرح",
+    ".حب - حساب نسبة حب عشوائية بين عضوين",
+    ".خطبة - اختيار عضو وإرسال تقرير خطبة مرح",
+    ".كذب - إرسال نسبة كذب عشوائية لعضو",
     ".حضور - تسجيل حضورك الشخصي",
     ".قائمة_حضور - عرض جدول الحضور اليومي",
     ".المغيبين - عرض قائمة المتغيبين عن الحضور",

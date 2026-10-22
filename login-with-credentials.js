@@ -1,3 +1,4 @@
+// Legacy interactive login helper; not used by npm start. Do not share credentials or appstate.
 const login = require("@dongdev/fca-unofficial");
 const fs = require("fs");
 const readline = require('readline');

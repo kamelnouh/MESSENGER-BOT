@@ -1,3 +1,4 @@
+// Reads and writes the bot's JSON-backed group settings, attendance, and moderation state.
 const fs = require("fs");
 const path = require("path");
 

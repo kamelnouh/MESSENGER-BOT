@@ -1,3 +1,4 @@
+// Tests the Arabic greeting fallback and preservation of admin-customized greetings.
 const assert = require("node:assert/strict");
 const test = require("node:test");
 const DataManager = require("../dataManager");

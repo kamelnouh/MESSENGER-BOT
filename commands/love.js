@@ -1,7 +1,9 @@
-const axios = "axios" in global ? global.axios : require("axios");
+/**
+ * .حب: calculates a playful compatibility percentage for the caller and a
+ * replied-to or random group member; falls back to a text report if needed.
+ */
 const fs = "fs" in global ? global.fs : require("fs");
 const path = require("path");
-const { createCanvas, loadImage } = require("canvas");
 
 // دالة ذكية لتخمين الجنس بناءً على الاسم للكوميديا الجزائرية
 function guessGender(name) {
@@ -114,15 +116,11 @@ module.exports = {
             `يا ${user1Name} و ${user2Name}، نسبة الحب بينكم ${loveRate}%! بينكم غير الشجار والخصام، لو كان تكملوا هكا واحد فيكم راح يرمي طوب على الاخر في وسط القروب! 💔🗑️`;
         }
 
-        const timestamp = Date.now();
-
-        const avatar1Url =
-          `https://graph.facebook.com/${user1ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
-
-        const avatar2Url =
-          `https://graph.facebook.com/${user2ID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
+        const avatar1Url = usersObj[user1ID]?.thumbSrc;
+        const avatar2Url = usersObj[user2ID]?.thumbSrc;
 
         try {
+          const { createCanvas, loadImage } = require("canvas");
           const canvas = createCanvas(1200, 630);
           const ctx = canvas.getContext('2d');
 

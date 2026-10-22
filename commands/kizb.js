@@ -1,7 +1,9 @@
-const axios = "axios" in global ? global.axios : require("axios");
+/**
+ * .كذب: assigns a humorous random honesty score to the caller or replied-to
+ * member, with an image card when Canvas and the profile avatar are available.
+ */
 const fs = "fs" in global ? global.fs : require("fs");
 const path = require("path");
-const { createCanvas, loadImage } = require("canvas");
 
 // دالة ذكية لتخمين الجنس بناءً على الاسم للكوميديا الجزائرية
 function guessGender(name) {
@@ -54,10 +56,10 @@ module.exports = {
           }
         }
 
-        const timestamp = Date.now();
-        const avatarUrl = `https://graph.facebook.com/${targetID}/picture?height=720&width=720&access_token=6628568379|c1e620fa708a1d5696fb991c1bde5662&t=${timestamp}`;
+        const avatarUrl = usersObj[targetID]?.thumbSrc;
         
         try {
+          const { createCanvas, loadImage } = require("canvas");
           const canvas = createCanvas(1200, 630);
           const ctx = canvas.getContext('2d');
 

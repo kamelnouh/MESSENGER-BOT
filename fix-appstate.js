@@ -1,3 +1,4 @@
+// Normalizes an existing appstate.json file; it does not log in or create a session.
 const fs = require('fs');
 
 console.log('🔧 Fixing appstate.json format...\n');
